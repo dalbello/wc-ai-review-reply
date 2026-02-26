@@ -4,7 +4,7 @@ Tags: woocommerce, reviews, ai, openai, customer-service
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,12 +12,12 @@ Generate AI-powered draft replies for WooCommerce product reviews right from wp-
 
 == Description ==
 
-WC AI Review Reply adds a one-click "✨ Generate Reply" action to WooCommerce product reviews in the admin comments screen.
+WC AI Review Reply adds a one-click "✨ Generate AI Reply" action to WooCommerce product reviews in the admin comments screen.
 
 Features:
 * One-click AI reply drafts for review moderation workflow
-* Works for both positive and negative reviews
-* Tone options: friendly, professional, apologetic
+* Uses product name + rating context in prompt
+* Tone options: friendly, professional, casual
 * Draft auto-inserts into the quick reply textarea
 * Bring your own OpenAI API key (no SaaS lock-in)
 
@@ -27,7 +27,7 @@ Features:
 2. Activate the plugin.
 3. Go to WooCommerce > AI Review Reply and add your OpenAI API key.
 4. Open Comments and filter by `Comment type: Reviews`.
-5. Click "✨ Generate Reply" next to any review.
+5. Click "✨ Generate AI Reply" next to any review.
 
 == Frequently Asked Questions ==
 
@@ -41,6 +41,11 @@ Default is `gpt-4o-mini` for speed/cost. You can change it in settings.
 Yes. The plugin is free. You only pay OpenAI for API usage.
 
 == Changelog ==
+
+= 1.0.2 =
+* Updated tone presets to professional/friendly/casual
+* Improved prompt instructions for safer support-style replies
+* Minor UX copy polish
 
 = 1.0.1 =
 * Improved prompt quality for positive/negative sentiment handling

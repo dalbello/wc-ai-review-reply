@@ -3,7 +3,7 @@
  * Plugin Name: WC AI Review Reply
  * Plugin URI: https://tinyship.ai/plugins/
  * Description: Adds a one-click AI reply generator for WooCommerce product reviews in wp-admin.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: TinyShip
  * Author URI: https://tinyship.ai
  * Requires at least: 6.0
@@ -55,12 +55,13 @@ final class WCAIReviewReply {
     }
 
     public function sanitize_settings($input) {
+        $allowed_tones = ['professional', 'friendly', 'casual'];
+        $tone = sanitize_text_field($input['tone'] ?? 'friendly');
+
         return [
             'api_key' => sanitize_text_field($input['api_key'] ?? ''),
             'model' => sanitize_text_field($input['model'] ?? 'gpt-4o-mini'),
-            'tone' => in_array(($input['tone'] ?? 'friendly'), ['professional', 'friendly', 'apologetic'], true)
-                ? $input['tone']
-                : 'friendly',
+            'tone' => in_array($tone, $allowed_tones, true) ? $tone : 'friendly',
         ];
     }
 
@@ -73,7 +74,7 @@ final class WCAIReviewReply {
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('WC AI Review Reply', 'wc-ai-review-reply'); ?></h1>
-            <p><?php esc_html_e('Add your OpenAI API key and generate smart review reply drafts with one click.', 'wc-ai-review-reply'); ?></p>
+            <p><?php esc_html_e('Add your OpenAI API key and generate on-brand review reply drafts with one click.', 'wc-ai-review-reply'); ?></p>
             <form method="post" action="options.php">
                 <?php settings_fields('wc_ai_review_reply_group'); ?>
                 <table class="form-table" role="presentation">
@@ -89,7 +90,7 @@ final class WCAIReviewReply {
                         <th scope="row"><label for="wc-airr-tone"><?php esc_html_e('Default Tone', 'wc-ai-review-reply'); ?></label></th>
                         <td>
                             <select id="wc-airr-tone" name="<?php echo esc_attr(self::OPTION_KEY); ?>[tone]">
-                                <?php foreach (['professional', 'friendly', 'apologetic'] as $tone) : ?>
+                                <?php foreach (['professional', 'friendly', 'casual'] as $tone) : ?>
                                     <option value="<?php echo esc_attr($tone); ?>" <?php selected(($settings['tone'] ?? 'friendly'), $tone); ?>><?php echo esc_html(ucfirst($tone)); ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -107,7 +108,7 @@ final class WCAIReviewReply {
             return;
         }
 
-        wp_register_script('wc-ai-review-reply-admin', '', ['jquery'], '1.0.1', true);
+        wp_register_script('wc-ai-review-reply-admin', '', ['jquery'], '1.0.2', true);
         wp_enqueue_script('wc-ai-review-reply-admin');
 
         wp_localize_script('wc-ai-review-reply-admin', 'WCAIRR', [
@@ -116,7 +117,7 @@ final class WCAIReviewReply {
             'defaultTone' => (get_option(self::OPTION_KEY, [])['tone'] ?? 'friendly'),
             'labels' => [
                 'generating' => __('Generating…', 'wc-ai-review-reply'),
-                'buttonText' => __('✨ Generate Reply', 'wc-ai-review-reply'),
+                'buttonText' => __('✨ Generate AI Reply', 'wc-ai-review-reply'),
                 'inserted' => __('Draft inserted into the reply box below.', 'wc-ai-review-reply'),
                 'error' => __('Could not generate reply. Check API key/settings.', 'wc-ai-review-reply'),
             ],
@@ -176,8 +177,8 @@ JS;
         $comment_id = (int) $comment->comment_ID;
         $markup = '<div class="wc-airr-wrap" style="margin-top:8px;padding:8px;border:1px solid #ddd;background:#fff;">';
         $markup .= '<label style="margin-right:6px;">Tone</label>';
-        $markup .= '<select class="wc-airr-tone"><option value="friendly">Friendly</option><option value="professional">Professional</option><option value="apologetic">Apologetic</option></select> ';
-        $markup .= '<button class="button button-secondary wc-airr-generate" data-comment-id="' . esc_attr($comment_id) . '">✨ Generate Reply</button>';
+        $markup .= '<select class="wc-airr-tone"><option value="friendly">Friendly</option><option value="professional">Professional</option><option value="casual">Casual</option></select> ';
+        $markup .= '<button class="button button-secondary wc-airr-generate" data-comment-id="' . esc_attr($comment_id) . '">✨ Generate AI Reply</button>';
         $markup .= '<pre id="wc-airr-output-' . esc_attr($comment_id) . '" style="white-space:pre-wrap;margin-top:8px;"></pre>';
         $markup .= '</div>';
 
@@ -211,9 +212,9 @@ JS;
         $product = get_post($review->comment_post_ID);
         $product_name = $product ? $product->post_title : 'the product';
 
-        $system = 'You write concise, empathetic customer support replies for WooCommerce product reviews.';
+        $system = 'You write concise, human customer support replies for WooCommerce product reviews.';
         $user = sprintf(
-            "Write a %s public reply draft to this review.\nProduct: %s\nRating: %s/5\nReviewer: %s\nReview: %s\n\nRules:\n- 2 to 4 sentences\n- Sound human, warm, and clear\n- If positive, thank and reinforce value\n- If negative, acknowledge issue and offer help path\n- Do not promise refunds/replacements directly",
+            "Write a %s public reply draft to this review.\nProduct: %s\nRating: %s/5\nReviewer: %s\nReview: %s\n\nRules:\n- 2 to 4 sentences\n- Sound human, warm, and clear\n- Thank the reviewer by name if possible\n- If negative sentiment appears, acknowledge the issue and invite them to support\n- Do not promise refunds/replacements directly",
             $tone,
             $product_name,
             $rating ? $rating : 'unknown',
